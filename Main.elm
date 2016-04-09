@@ -59,11 +59,25 @@ view : Model -> Html
 view model =
   div
     [ class "content" ]
-    [ header [] [ h1 [] [ text "like Docker Hub, but in Elm" ] ]
+    [ header
+        []
+        [ h1 [] [ text "like Docker Hub, but in Elm" ]
+        , (viewFilter model.responses)
+        ]
     , ul
         []
         (List.map viewResponse model.responses)
     ]
+
+
+viewFilter responses =
+  select
+    []
+    (List.map viewOption responses)
+
+
+viewOption response =
+  option [] [ text response.namespace ]
 
 
 viewResponse : ServerResponse -> Html
@@ -74,7 +88,7 @@ viewResponse response =
         [ href "something" ]
         [ span [] [ text (response.namespace ++ " / " ++ response.name) ]
         , (if response.is_private then
-            span [] [ text "private" ]
+            span [] [ text "  private" ]
            else
             span [] []
           )
