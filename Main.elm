@@ -134,6 +134,8 @@ initialModel =
 
 type Action
   = FilterByName String
+  | PreviousPage
+  | NextPage
 
 
 update : Action -> Model -> Model
@@ -142,16 +144,23 @@ update action model =
     FilterByName str ->
       { model | filterStr = str }
 
+    PreviousPage ->
+      { model
+        | pageNum =
+            if model.pageNum == 1 then
+              1
+            else
+              model.pageNum - 1
+      }
 
-viewFilter : Address Action -> String -> Html
-viewFilter address str =
-  input
-    [ class "filter-repo"
-    , value str
-    , onInput address FilterByName
-    , placeholder "All Accounts"
-    ]
-    []
+    NextPage ->
+      { model
+        | pageNum =
+            if List.length model.responses < (model.pageNum * 10) then
+              model.pageNum
+            else
+              model.pageNum + 1
+      }
 
 
 view : Address Action -> Model -> Html
@@ -176,14 +185,15 @@ viewHeader =
     [ h1 [] [ text "like Docker Hub, but in Elm" ] ]
 
 
-viewPaginator : Address Action -> Model -> Html
-viewPaginator address model =
-  div
-    []
-    [ button [] [ text "<" ]
-    , span [ class "current-page" ] [ text (toString model.pageNum) ]
-    , button [] [ text ">" ]
+viewFilter : Address Action -> String -> Html
+viewFilter address str =
+  input
+    [ class "filter-repo"
+    , value str
+    , onInput address FilterByName
+    , placeholder "All Accounts"
     ]
+    []
 
 
 viewResponses : Address Action -> Model -> Html
@@ -212,6 +222,16 @@ viewResponse response =
        else
         span [] []
       )
+    ]
+
+
+viewPaginator : Address Action -> Model -> Html
+viewPaginator address model =
+  div
+    []
+    [ button [ onClick address PreviousPage ] [ text "<" ]
+    , span [ class "current-page" ] [ text (toString model.pageNum) ]
+    , button [ onClick address NextPage ] [ text ">" ]
     ]
 
 
