@@ -129,6 +129,55 @@ initialModel =
         , description = "if you didn't believe... you will!"
         , is_private = False
         }
+      , { id = 13
+        , user = "mikesi2"
+        , name = "segundoProyecto"
+        , namespace = "nombreEspacio"
+        , description = "if you didn't believe... you will!"
+        , is_private = False
+        }
+      , { id = 14
+        , user = "mikesi2"
+        , name = "segundoProyecto"
+        , namespace = "nombreEspacio"
+        , description = "if you didn't believe... you will!"
+        , is_private = False
+        }
+      , { id = 15
+        , user = "mikesi2"
+        , name = "segundoProyecto"
+        , namespace = "nombreEspacio"
+        , description = "if you didn't believe... you will!"
+        , is_private = False
+        }
+      , { id = 16
+        , user = "mikesi2"
+        , name = "segundoProyecto"
+        , namespace = "nombreEspacio"
+        , description = "if you didn't believe... you will!"
+        , is_private = False
+        }
+      , { id = 17
+        , user = "mikesi2"
+        , name = "segundoProyecto"
+        , namespace = "nombreEspacio"
+        , description = "if you didn't believe... you will!"
+        , is_private = False
+        }
+      , { id = 18
+        , user = "mikesi2"
+        , name = "segundoProyecto"
+        , namespace = "nombreEspacio"
+        , description = "if you didn't believe... you will!"
+        , is_private = False
+        }
+      , { id = 19
+        , user = "mikesi2"
+        , name = "segundoProyecto"
+        , namespace = "nombreEspacio"
+        , description = "if you didn't believe... you will!"
+        , is_private = False
+        }
       ]
   }
 
@@ -143,25 +192,41 @@ update : Action -> Model -> Model
 update action model =
   case action of
     FilterByName str ->
-      { model | filterStr = str }
+      { model
+        | filterStr = str
+        , pageNum = 1
+      }
 
     PreviousPage ->
       { model
         | pageNum =
-            if model.pageNum == 1 then
+            if model.pageNum <= 1 then
               1
             else
               model.pageNum - 1
       }
 
     NextPage ->
-      { model
-        | pageNum =
-            if List.length model.responses < (model.pageNum * 10) then
-              model.pageNum
-            else
-              model.pageNum + 1
-      }
+      let
+        count =
+          if String.isEmpty model.filterStr then
+            List.length model.responses
+          else
+            model.responses
+              |> List.filter
+                  (\r ->
+                    (String.startsWith model.filterStr r.namespace)
+                      || (String.isEmpty model.filterStr == True)
+                  )
+              |> List.length
+      in
+        { model
+          | pageNum =
+              if count < (model.pageNum * 10) then
+                model.pageNum
+              else
+                model.pageNum + 1
+        }
 
 
 view : Address Action -> Model -> Html
