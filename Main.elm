@@ -9,6 +9,7 @@ import Json.Decode as Json
 import Task exposing (Task)
 import Effects exposing (Effects)
 import String
+import Set
 
 
 type alias Model =
@@ -168,7 +169,7 @@ view address model =
   div
     [ class "content" ]
     [ (viewHeader)
-    , (viewFilter address model.filterStr)
+    , (viewFilter address model)
     , (viewResponses address model)
     , (viewPaginator address model)
     ]
@@ -178,6 +179,10 @@ onInput address wrap =
   on "input" targetValue (\val -> Signal.message address (wrap val))
 
 
+onChange address wrap =
+  on "change" targetValue (\val -> Signal.message address (wrap val))
+
+
 viewHeader : Html
 viewHeader =
   header
@@ -185,15 +190,23 @@ viewHeader =
     [ h1 [] [ text "like Docker Hub, but in Elm" ] ]
 
 
-viewFilter : Address Action -> String -> Html
-viewFilter address str =
-  input
-    [ class "filter-repo"
-    , value str
-    , onInput address FilterByName
-    , placeholder "All Accounts"
-    ]
-    []
+viewFilter : Address Action -> Model -> Html
+viewFilter address model =
+  select
+    [ name "filter", onChange address FilterByName ]
+    (option [ value "", selected True ] [ text "All Accounts" ]
+      :: (model.responses
+            |> List.map .namespace
+            |> Set.fromList
+            |> Set.toList
+            |> List.map viewFilterOption
+         )
+    )
+
+
+viewFilterOption : String -> Html
+viewFilterOption namespace =
+  option [] [ text namespace ]
 
 
 viewResponses : Address Action -> Model -> Html
