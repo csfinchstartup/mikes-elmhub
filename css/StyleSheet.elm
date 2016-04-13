@@ -1,4 +1,4 @@
-module Css.ElmHub (..) where
+module Css.StyleSheet (..) where
 
 import Css exposing (..)
 import Css.Elements exposing (..)

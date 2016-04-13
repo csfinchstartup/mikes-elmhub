@@ -1,10 +1,10 @@
 module Stylesheets (..) where
 
 import Css.File exposing (..)
-import Css.ElmHub
+import Css.StyleSheet
 
 
 port files : CssFileStructure
 port files =
   toFileStructure
-    [ ( "style.css", compile Css.ElmHub.css ) ]
+    [ ( "built/style.css", compile Css.StyleSheet.css ) ]

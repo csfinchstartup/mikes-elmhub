@@ -1,44 +1,49 @@
-## Intro
+## Quickstart
 
-This is *not* a test; it is not pass/fail. It's intended to show general problem
-solving skills and your approach to building out a UI.
+```
+# NOTE: you must have virtualenv installed for the quickstart option,
+# otherwise you can follow the manual steps in the next section
+./run_app.sh
+```
 
-We believe this is a much better approach to hiring frontend engineers when
-compared to standard CS questions.
+## Manual
+```
+cd <REPO_ROOT_DIR>/server
+pip install flask
+python server.py &
+open <REPO_ROOT_DIR>/index.html
+```
 
-## Problem definition
 
-We're looking to build the screenshot below.  The interaction is as follows:
+### To build yourself
+First: [Download and install Elm](http://elm-lang.org/install)
+```
+elm css StyleSheets.elm
+elm package install -y; elm live Main.elm --open --output=built/elm.js
+```
 
-- The main screen lists all repositories a user has access to
-- The dropdown box at the top ('Filter by ${x}') shows only repositories from
-  that namespace (ie `repository.namespace === x`).
-- Pagination at the bottom works for listing all repositories and when filtering
-  repositories by namespace
-
-These are the only interactions that need to be defined.
-
-There are **no** expectations for how this is to be built; use your favourite
-technologies to create the example
-
-You do not need to build out the APIs.  Instead, feel free to create mock APIs
-that return a simple JSON object.  Deciding the APIs to use is at your
-discretion.
-
-## What we look for in a solution
-
-We're looking for an overview of your UI building skills.  This includes:
-
+### Solution Commentary
 - Basic web knowledge (html/js/css)
 - Framework experience + choices
+  - Elm is a reactive programming framework (e.g. React/Redux stack), but it has a number of unique features and advantages that made it a compelling choice for this project:
+    - type system
+    - compiler to catch bugs before runtime
+    - immutable data structures
+    - performant (virtual DOM)
+    - Elm CSS preprocessor
+    - easy to use build/package system (updates elm-package.json whenever a new package is installed)
+    - fun to use
 - UI architecture + design approach
+  - stub out models/views
+  - add Actions
+  - make models/views real
+  - hack together a simple server
+  - TODO unify naming conventions
+  - TODO consider folder systems
 - API design, requirements and usage
+  - one JSON file per user (currently only supports "library" user)
+  - TODO parameterize the server endpoint
 - Security considerations
+  - TODO
 - Use of tooling
-
-We'll also walk through your solution to learn each of your approaches and have
-you explain your design decisions, explaining the pros and cons of each.
-
-## Screenshot
-
-![](http://i.imgur.com/GCWPUCO.png)
+  - elm-package.json, elm live, elm package install, elm css
