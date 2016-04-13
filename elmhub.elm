@@ -2,7 +2,7 @@ module ElmHub (..) where
 
 import Http
 import Html exposing (..)
-import Html.Attributes exposing (class, href, selected, value, name, property, style)
+import Html.Attributes exposing (class, href, selected, value, name, property, style, for)
 import Html.Events exposing (..)
 import Signal exposing (Address)
 import StartApp.Simple as StartApp
@@ -183,8 +183,7 @@ view : Address Action -> Model -> Html
 view address model =
   div
     [ class "content" ]
-    [ (viewHeader)
-    , (viewFilter address model)
+    [ (viewHeader address model)
     , (viewResponses address model)
     , (viewPaginator address model)
     ]
@@ -198,19 +197,23 @@ onChange address wrap =
   on "change" targetValue (\val -> Signal.message address (wrap val))
 
 
-viewHeader : Html
-viewHeader =
+viewHeader : Address Action -> Model -> Html
+viewHeader address model =
   header
     []
-    [ h1 [] [ text "like Docker Hub, but in Elm" ] ]
+    [ h1 [] [ text "like Docker Hub, but in Elm" ]
+    , (viewFilter address model) ]
 
 
 viewFilter : Address Action -> Model -> Html
 viewFilter address model =
+  -- <label for="shirt_color">Shirt Color:</label>
+  --     <select id="color" name="shirt_color">
   div
     []
-    [ select
-        [ name "filter", onChange address FilterByName ]
+    [ label [ for "namespace-filter"] [ text "Filter by "]
+      , select
+        [ name "namespace-filter", onChange address FilterByName ]
         (option [ value "", selected True ] [ text "All Accounts" ]
           :: (model.responses
                 |> List.map .namespace
@@ -251,21 +254,29 @@ viewResponses address { filterStr, pageNum, responses } =
 viewResponse : RepoResult -> Html
 viewResponse response =
   let
-    namespaceTitle = span [ class "repo-namespace-title" ] [ text response.namespace ]
-    seperator = span [] [ text " / " ]
-    nameTitle = span [ class "repo-name-title" ] [ text response.name ]
-    privateMarker = (if response.is_private then
+    namespaceTitle =
+      span [ class "repo-namespace-title" ] [ text response.namespace ]
+
+    seperator =
+      span [] [ text " / " ]
+
+    nameTitle =
+      span [ class "repo-name-title" ] [ text response.name ]
+
+    privateMarker =
+      (if response.is_private then
         span [ class "is-private" ] [ text "private" ]
        else
         span [] []
       )
-    description = (if String.isEmpty response.description then
+
+    description =
+      (if String.isEmpty response.description then
         p [] []
        else
         small [] [ p [ class "repo-description" ] [ text response.description ] ]
       )
   in
-
     li
       [ class "repo-item" ]
       [ a

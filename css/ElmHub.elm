@@ -12,6 +12,9 @@ css =
         , padding (em 2)
         , fontFamilies [ "Helvetica", "Arial", "serif" ]
         ]
+    , select
+        [ marginBottom (em 1.5)
+        ]
     , (.)
         "is-private"
         [ color privateColor

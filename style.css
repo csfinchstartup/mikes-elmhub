@@ -1,0 +1,38 @@
+.content {
+    margin: 0 auto;
+    padding: 2em;
+    font-family: Helvetica, Arial, serif;
+}
+
+select {
+    margin-bottom: 1.5em;
+}
+
+.is-private {
+    color: #FF6600;
+    border-color: #FF6600;
+    border-style: solid;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    margin-left: 0.5em;
+}
+
+.repo-item {
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+}
+
+.repo-item > a {
+    color: #757575;
+    text-decoration: none;
+}
+
+.repo-description {
+    color: #A9A9A9;
+}
+
+.repo-name-title {
+    color: #000000;
+}
