@@ -2,7 +2,7 @@ module ElmHub (..) where
 
 import Http
 import Html exposing (..)
-import Html.Attributes exposing (class, href, selected, value, name, property)
+import Html.Attributes exposing (class, href, selected, value, name, property, style)
 import Html.Events exposing (..)
 import Signal exposing (Address)
 import StartApp.Simple as StartApp
@@ -16,7 +16,8 @@ import Json.Decode.Pipeline exposing (..)
 import Json.Encode
 import Maybe exposing (..)
 
-repoFeed userName=
+
+repoFeed userName =
   let
     url =
       "http://127.0.0.1:3000/api/repos/" ++ userName
@@ -117,7 +118,6 @@ type Action
   | Search
 
 
-
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
   case action of
@@ -133,7 +133,7 @@ update action model =
       ( { model | responses = responses }, Effects.none )
 
     Search ->
-      ( model, repoFeed model.userName)
+      ( model, repoFeed model.userName )
 
     FilterByName str ->
       ( { model
@@ -167,7 +167,6 @@ update action model =
                       || (String.isEmpty model.filterStr == True)
                   )
               |> List.length
-
       in
         ( { model
             | pageNum =
@@ -208,16 +207,20 @@ viewHeader =
 
 viewFilter : Address Action -> Model -> Html
 viewFilter address model =
-  select
-    [ name "filter", onChange address FilterByName ]
-    (option [ value "", selected True ] [ text "All Accounts" ]
-      :: (model.responses
-            |> List.map .namespace
-            |> Set.fromList
-            |> Set.toList
-            |> List.map viewFilterOption
-         )
-    )
+  div
+    []
+    [ select
+        [ name "filter", onChange address FilterByName ]
+        (option [ value "", selected True ] [ text "All Accounts" ]
+          :: (model.responses
+                |> List.map .namespace
+                |> Set.fromList
+                |> Set.toList
+                |> List.map viewFilterOption
+             )
+        )
+    , hr [] []
+    ]
 
 
 defaultValue str =
@@ -232,7 +235,7 @@ viewFilterOption namespace =
 viewResponses : Address Action -> Model -> Html
 viewResponses address { filterStr, pageNum, responses } =
   ul
-    []
+    [ style [ ( "list-style", "none" ), ( "-webkit-padding-start", "0" ) ] ]
     (responses
       |> List.filter
           (\r ->
@@ -247,15 +250,34 @@ viewResponses address { filterStr, pageNum, responses } =
 
 viewResponse : RepoResult -> Html
 viewResponse response =
-  li
-    []
-    [ span [] [ text (response.namespace ++ " / " ++ response.name) ]
-    , (if response.is_private then
-        span [] [ text "  private" ]
+  let
+    namespaceTitle = span [ class "repo-namespace-title" ] [ text response.namespace ]
+    seperator = span [] [ text " / " ]
+    nameTitle = span [ class "repo-name-title" ] [ text response.name ]
+    privateMarker = (if response.is_private then
+        span [ class "is-private" ] [ text "private" ]
        else
         span [] []
       )
-    ]
+    description = (if String.isEmpty response.description then
+        p [] []
+       else
+        small [] [ p [ class "repo-description" ] [ text response.description ] ]
+      )
+  in
+
+    li
+      [ class "repo-item" ]
+      [ a
+          [ href "#" ]
+          [ namespaceTitle
+          , seperator
+          , nameTitle
+          , privateMarker
+          , description
+          ]
+      , hr [] []
+      ]
 
 
 viewPaginator : Address Action -> Model -> Html
