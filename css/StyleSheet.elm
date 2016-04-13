@@ -8,29 +8,32 @@ css =
   stylesheet
     [ (.)
         "content"
-        [ margin2 zero auto
-        , padding (em 2)
+        [ padding (em 2)
         , fontFamilies [ "Helvetica", "Arial", "serif" ]
         ]
-    , select
-        [ marginBottom (em 1.5)
+    , (.)
+        "user-name-search"
+        [ margin2 (em 1) (em 0)
+        , children [ input [ marginRight (em 1) ] ]
         ]
+    , (.)
+        "namespace-filter"
+        [ marginBottom (em 1.5) ]
     , (.)
         "is-private"
         [ color privateColor
         , borderColor privateColor
         , borderStyle solid
-        , paddingTop (em 0.25)
-        , paddingBottom (em 0.25)
-        , paddingLeft (em 0.5)
-        , paddingRight (em 0.5)
+        , padding2 (em 0.1) (em 0.5)
         , marginLeft (em 0.5)
         ]
     , (.)
+        "repo-items-container"
+        [ margin (em 0)
+        ]
+    , (.)
         "repo-item"
-        [ paddingTop (em 0.5)
-        , paddingBottom (em 0.5)
-        , children
+        [ children
             [ a
                 [ color darkGray, textDecoration none ]
             ]
@@ -41,6 +44,9 @@ css =
     , (.)
         "repo-name-title"
         [ color black ]
+    , (.)
+        "error"
+        [ color red ]
     ]
 
 
@@ -70,3 +76,7 @@ darkGray =
 
 orange =
   hex "FF6600"
+
+
+red =
+  hex "B0171F"

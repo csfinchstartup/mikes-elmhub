@@ -3,10 +3,10 @@
 ```
 # NOTE: you must have virtualenv installed for the quickstart option,
 # otherwise you can follow the manual steps in the next section
-./run_app.sh
+./quickstart.sh
 ```
 
-## Manual
+## Manual Start
 ```
 cd <REPO_ROOT_DIR>/server
 pip install flask
@@ -14,12 +14,13 @@ python server.py &
 open <REPO_ROOT_DIR>/index.html
 ```
 
-
-### To build yourself
+## Dev Workflow
 First: [Download and install Elm](http://elm-lang.org/install)
 ```
-elm css StyleSheets.elm
-elm package install -y; elm live Main.elm --open --output=built/elm.js
+./build_dev.sh
+# NOTE: Elm-CSS changes must be manually recompiled:
+#       elm css StyleSheets.elm
+
 ```
 
 ### Solution Commentary

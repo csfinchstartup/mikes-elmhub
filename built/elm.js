@@ -11139,12 +11139,12 @@ Elm.ElmHub.make = function (_elm) {
    $Task = Elm.Task.make(_elm);
    var _op = {};
    var viewResponse = function (response) {
-      var description = $String.isEmpty(response.description) ? A2($Html.p,_U.list([]),_U.list([])) : A2($Html.small,
+      var description = $String.isEmpty(response.description) ? $Html.text("") : A2($Html.small,
       _U.list([]),
       _U.list([A2($Html.p,_U.list([$Html$Attributes.$class("repo-description")]),_U.list([$Html.text(response.description)]))]));
-      var privateMarker = response.is_private ? A2($Html.span,
-      _U.list([$Html$Attributes.$class("is-private")]),
-      _U.list([$Html.text("private")])) : A2($Html.span,_U.list([]),_U.list([]));
+      var privateMarker = response.is_private ? A2($Html.small,
+      _U.list([]),
+      _U.list([A2($Html.span,_U.list([$Html$Attributes.$class("is-private")]),_U.list([$Html.text("private")]))])) : $Html.text("");
       var nameTitle = A2($Html.span,_U.list([$Html$Attributes.$class("repo-name-title")]),_U.list([$Html.text(response.name)]));
       var seperator = A2($Html.span,_U.list([]),_U.list([$Html.text(" / ")]));
       var namespaceTitle = A2($Html.span,_U.list([$Html$Attributes.$class("repo-namespace-title")]),_U.list([$Html.text(response.namespace)]));
@@ -11157,7 +11157,8 @@ Elm.ElmHub.make = function (_elm) {
       var _p1 = _p0;
       var _p2 = _p1.filterStr;
       return A2($Html.ul,
-      _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "list-style",_1: "none"},{ctor: "_Tuple2",_0: "-webkit-padding-start",_1: "0"}]))]),
+      _U.list([$Html$Attributes.$class("repo-items-container")
+              ,$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "list-style",_1: "none"},{ctor: "_Tuple2",_0: "-webkit-padding-start",_1: "0"}]))]),
       A2($List.map,
       viewResponse,
       A2($List.take,
@@ -11168,13 +11169,28 @@ Elm.ElmHub.make = function (_elm) {
    });
    var viewFilterOption = function (namespace) {    return A2($Html.option,_U.list([]),_U.list([$Html.text(namespace)]));};
    var defaultValue = function (str) {    return A2($Html$Attributes.property,"defaultValue",$Json$Encode.string(str));};
+   var viewError = function (error) {
+      var _p3 = error;
+      if (_p3.ctor === "Just") {
+            return A2($Html.span,_U.list([$Html$Attributes.$class("error")]),_U.list([$Html.text(_p3._0)]));
+         } else {
+            return $Html.text("");
+         }
+   };
    var onChange = F2(function (address,wrap) {
       return A3($Html$Events.on,"change",$Html$Events.targetValue,function (val) {    return A2($Signal.message,address,wrap(val));});
    });
    var onInput = F2(function (address,wrap) {
       return A3($Html$Events.on,"input",$Html$Events.targetValue,function (val) {    return A2($Signal.message,address,wrap(val));});
    });
+   var SetUserName = function (a) {    return {ctor: "SetUserName",_0: a};};
    var Search = {ctor: "Search"};
+   var viewSearchUser = F2(function (address,model) {
+      return A2($Html.div,
+      _U.list([$Html$Attributes.$class("user-name-search")]),
+      _U.list([A2($Html.input,_U.list([A2(onInput,address,SetUserName),defaultValue(model.userName)]),_U.list([]))
+              ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Search)]),_U.list([$Html.text("Search by username")]))]));
+   });
    var HandleRepoError = function (a) {    return {ctor: "HandleRepoError",_0: a};};
    var HandleRepoResponse = function (a) {    return {ctor: "HandleRepoResponse",_0: a};};
    var NextPage = {ctor: "NextPage"};
@@ -11192,14 +11208,14 @@ Elm.ElmHub.make = function (_elm) {
       _U.list([]),
       _U.list([A2($Html.label,_U.list([$Html$Attributes.$for("namespace-filter")]),_U.list([$Html.text("Filter by ")]))
               ,A2($Html.select,
-              _U.list([$Html$Attributes.name("namespace-filter"),A2(onChange,address,FilterByName)]),
+              _U.list([$Html$Attributes.$class("namespace-filter"),$Html$Attributes.name("namespace-filter"),A2(onChange,address,FilterByName)]),
               A2($List._op["::"],
               A2($Html.option,_U.list([$Html$Attributes.value(""),$Html$Attributes.selected(true)]),_U.list([$Html.text("All Accounts")])),
               A2($List.map,viewFilterOption,$Set.toList($Set.fromList(A2($List.map,function (_) {    return _.namespace;},model.responses))))))
               ,A2($Html.hr,_U.list([]),_U.list([]))]));
    });
    var viewHeader = F2(function (address,model) {
-      return A2($Html.header,_U.list([]),_U.list([A2($Html.h1,_U.list([]),_U.list([$Html.text("like Docker Hub, but in Elm")])),A2(viewFilter,address,model)]));
+      return A2($Html.header,_U.list([]),_U.list([A2(viewSearchUser,address,model),A2(viewFilter,address,model),viewError(model.error)]));
    });
    var view = F2(function (address,model) {
       return A2($Html.div,
@@ -11278,9 +11294,9 @@ Elm.ElmHub.make = function (_elm) {
    A3($Json$Decode$Pipeline.required,"user",$Json$Decode.string,$Json$Decode$Pipeline.decode(RepoResult))))))))))));
    var responseDecoder = A2($Json$Decode._op[":="],"results",$Json$Decode.list(serverResponseDecoder));
    var decodeResults = function (json) {
-      var _p3 = A2($Json$Decode.decodeString,responseDecoder,json);
-      if (_p3.ctor === "Ok") {
-            return _p3._0;
+      var _p4 = A2($Json$Decode.decodeString,responseDecoder,json);
+      if (_p4.ctor === "Ok") {
+            return _p4._0;
          } else {
             return _U.list([]);
          }
@@ -11296,17 +11312,21 @@ Elm.ElmHub.make = function (_elm) {
       return $Effects.task(task);
    };
    var update = F2(function (action,model) {
-      var _p4 = action;
-      switch (_p4.ctor)
-      {case "HandleRepoError": var _p5 = _p4._0;
-           if (_p5.ctor === "UnexpectedPayload") {
-                 return {ctor: "_Tuple2",_0: _U.update(model,{error: $Maybe.Just(_p5._0)}),_1: $Effects.none};
+      var _p5 = action;
+      switch (_p5.ctor)
+      {case "SetUserName": return {ctor: "_Tuple2",_0: _U.update(model,{userName: _p5._0}),_1: $Effects.none};
+         case "HandleRepoError": var _p6 = _p5._0;
+           if (_p6.ctor === "UnexpectedPayload") {
+                 return {ctor: "_Tuple2",_0: _U.update(model,{error: $Maybe.Just(_p6._0),responses: _U.list([])}),_1: $Effects.none};
               } else {
-                 return {ctor: "_Tuple2",_0: _U.update(model,{error: $Maybe.Just("There was an error communicating with Docker Hub")}),_1: $Effects.none};
+                 return {ctor: "_Tuple2"
+                        ,_0: _U.update(model,
+                        {error: $Maybe.Just("There was an error communicating with Elm Hub. Take a look at your username..."),responses: _U.list([])})
+                        ,_1: $Effects.none};
               }
-         case "HandleRepoResponse": return {ctor: "_Tuple2",_0: _U.update(model,{responses: _p4._0}),_1: $Effects.none};
+         case "HandleRepoResponse": return {ctor: "_Tuple2",_0: _U.update(model,{responses: _p5._0,error: $Maybe.Nothing}),_1: $Effects.none};
          case "Search": return {ctor: "_Tuple2",_0: model,_1: repoFeed(model.userName)};
-         case "FilterByName": return {ctor: "_Tuple2",_0: _U.update(model,{filterStr: _p4._0,pageNum: 1}),_1: $Effects.none};
+         case "FilterByName": return {ctor: "_Tuple2",_0: _U.update(model,{filterStr: _p5._0,pageNum: 1}),_1: $Effects.none};
          case "PreviousPage": return {ctor: "_Tuple2",_0: _U.update(model,{pageNum: _U.cmp(model.pageNum,1) < 1 ? 1 : model.pageNum - 1}),_1: $Effects.none};
          default: var count = $String.isEmpty(model.filterStr) ? $List.length(model.responses) : $List.length(A2($List.filter,
            function (r) {
@@ -11330,11 +11350,14 @@ Elm.ElmHub.make = function (_elm) {
                                ,HandleRepoResponse: HandleRepoResponse
                                ,HandleRepoError: HandleRepoError
                                ,Search: Search
+                               ,SetUserName: SetUserName
                                ,update: update
                                ,view: view
                                ,onInput: onInput
                                ,onChange: onChange
                                ,viewHeader: viewHeader
+                               ,viewError: viewError
+                               ,viewSearchUser: viewSearchUser
                                ,viewFilter: viewFilter
                                ,defaultValue: defaultValue
                                ,viewFilterOption: viewFilterOption

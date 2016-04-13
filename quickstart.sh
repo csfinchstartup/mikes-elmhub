@@ -2,7 +2,7 @@
 
 cd server
 virtualenv env
-pip install -r requirements.txt
+pip install flask
 python server.py &
 
 open ../index.html

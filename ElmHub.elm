@@ -116,21 +116,40 @@ type Action
   | HandleRepoResponse (List RepoResult)
   | HandleRepoError Http.Error
   | Search
+  | SetUserName String
 
 
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
   case action of
+    SetUserName name ->
+      ( { model | userName = name }, Effects.none )
+
     HandleRepoError error ->
       case error of
         Http.UnexpectedPayload error ->
-          ( { model | error = Just error }, Effects.none )
+          ( { model
+              | error = Just error
+              , responses = []
+            }
+          , Effects.none
+          )
 
         _ ->
-          ( { model | error = Just "There was an error communicating with Docker Hub" }, Effects.none )
+          ( { model
+              | error = Just "There was an error communicating with Elm Hub. Take a look at your username..."
+              , responses = []
+            }
+          , Effects.none
+          )
 
     HandleRepoResponse responses ->
-      ( { model | responses = responses }, Effects.none )
+      ( { model
+          | responses = responses
+          , error = Nothing
+        }
+      , Effects.none
+      )
 
     Search ->
       ( model, repoFeed model.userName )
@@ -201,19 +220,42 @@ viewHeader : Address Action -> Model -> Html
 viewHeader address model =
   header
     []
-    [ h1 [] [ text "like Docker Hub, but in Elm" ]
-    , (viewFilter address model) ]
+    [ (viewSearchUser address model)
+    , (viewFilter address model)
+    , (viewError model.error)
+    ]
+
+
+viewError : Maybe String -> Html
+viewError error =
+  case error of
+    Just message ->
+      span [ class "error" ] [ text message ]
+
+    Nothing ->
+      text ""
+
+
+viewSearchUser : Address Action -> Model -> Html
+viewSearchUser address model =
+  div
+    [ class "user-name-search" ]
+    [ input
+        [ onInput address SetUserName
+        , defaultValue model.userName
+        ]
+        []
+    , button [ onClick address Search ] [ text "Search by username" ]
+    ]
 
 
 viewFilter : Address Action -> Model -> Html
 viewFilter address model =
-  -- <label for="shirt_color">Shirt Color:</label>
-  --     <select id="color" name="shirt_color">
   div
     []
-    [ label [ for "namespace-filter"] [ text "Filter by "]
-      , select
-        [ name "namespace-filter", onChange address FilterByName ]
+    [ label [ for "namespace-filter" ] [ text "Filter by " ]
+    , select
+        [ class "namespace-filter", name "namespace-filter", onChange address FilterByName ]
         (option [ value "", selected True ] [ text "All Accounts" ]
           :: (model.responses
                 |> List.map .namespace
@@ -238,7 +280,7 @@ viewFilterOption namespace =
 viewResponses : Address Action -> Model -> Html
 viewResponses address { filterStr, pageNum, responses } =
   ul
-    [ style [ ( "list-style", "none" ), ( "-webkit-padding-start", "0" ) ] ]
+    [ class "repo-items-container", style [ ( "list-style", "none" ), ( "-webkit-padding-start", "0" ) ] ]
     (responses
       |> List.filter
           (\r ->
@@ -265,14 +307,14 @@ viewResponse response =
 
     privateMarker =
       (if response.is_private then
-        span [ class "is-private" ] [ text "private" ]
+        small [] [ span [ class "is-private" ] [ text "private" ] ]
        else
-        span [] []
+        text ""
       )
 
     description =
       (if String.isEmpty response.description then
-        p [] []
+        text ""
        else
         small [] [ p [ class "repo-description" ] [ text response.description ] ]
       )
