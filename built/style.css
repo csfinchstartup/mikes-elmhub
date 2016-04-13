@@ -19,7 +19,7 @@
     color: #FF6600;
     border-color: #FF6600;
     border-style: solid;
-    padding: 0.25em 0.5em;
+    padding: 0.1em 0.5em;
     margin-left: 0.5em;
 }
 
@@ -42,4 +42,9 @@
 
 .error {
     color: #B0171F;
+}
+
+.active-page {
+    color: #1874CD;
+    font-weight: bold;
 }

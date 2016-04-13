@@ -47,6 +47,7 @@ css =
     , (.)
         "error"
         [ color red ]
+    , (.) "active-page" [color blue, fontWeight bold]
     ]
 
 
@@ -80,3 +81,5 @@ orange =
 
 red =
   hex "B0171F"
+
+blue = hex "1874CD"

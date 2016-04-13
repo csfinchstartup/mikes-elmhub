@@ -11155,6 +11155,7 @@ Elm.ElmHub.make = function (_elm) {
    };
    var viewResponses = F2(function (address,_p0) {
       var _p1 = _p0;
+      var _p3 = _p1.reposPerPage;
       var _p2 = _p1.filterStr;
       return A2($Html.ul,
       _U.list([$Html$Attributes.$class("repo-items-container")
@@ -11162,17 +11163,17 @@ Elm.ElmHub.make = function (_elm) {
       A2($List.map,
       viewResponse,
       A2($List.take,
-      10,
+      _p3,
       A2($List.drop,
-      (_p1.pageNum - 1) * 10,
+      (_p1.pageNum - 1) * _p3,
       A2($List.filter,function (r) {    return A2($String.startsWith,_p2,r.namespace) || _U.eq($String.isEmpty(_p2),true);},_p1.responses)))));
    });
    var viewFilterOption = function (namespace) {    return A2($Html.option,_U.list([]),_U.list([$Html.text(namespace)]));};
    var defaultValue = function (str) {    return A2($Html$Attributes.property,"defaultValue",$Json$Encode.string(str));};
    var viewError = function (error) {
-      var _p3 = error;
-      if (_p3.ctor === "Just") {
-            return A2($Html.span,_U.list([$Html$Attributes.$class("error")]),_U.list([$Html.text(_p3._0)]));
+      var _p4 = error;
+      if (_p4.ctor === "Just") {
+            return A2($Html.span,_U.list([$Html$Attributes.$class("error")]),_U.list([$Html.text(_p4._0)]));
          } else {
             return $Html.text("");
          }
@@ -11182,6 +11183,18 @@ Elm.ElmHub.make = function (_elm) {
    });
    var onInput = F2(function (address,wrap) {
       return A3($Html$Events.on,"input",$Html$Events.targetValue,function (val) {    return A2($Signal.message,address,wrap(val));});
+   });
+   var JumpToPage = function (a) {    return {ctor: "JumpToPage",_0: a};};
+   var viewPageLink = F5(function (address,model,lower,active,upper) {
+      return A2($Html.div,
+      _U.list([$Html$Attributes.$class("number-buttons")]),
+      A2($List.map,
+      function (page) {
+         return A2($Html.button,
+         _U.list([A2($Html$Events.onClick,address,JumpToPage(page)),$Html$Attributes.$class(_U.eq(page,active) ? "active-page" : "just-another-page")]),
+         _U.list([$Html.text($Basics.toString(page))]));
+      },
+      _U.range(lower,upper)));
    });
    var SetUserName = function (a) {    return {ctor: "SetUserName",_0: a};};
    var Search = {ctor: "Search"};
@@ -11196,10 +11209,18 @@ Elm.ElmHub.make = function (_elm) {
    var NextPage = {ctor: "NextPage"};
    var PreviousPage = {ctor: "PreviousPage"};
    var viewPaginator = F2(function (address,model) {
+      var length = $List.length(model.responses);
+      var _p5 = model;
+      var pageNum = _p5.pageNum;
+      var reposPerPage = _p5.reposPerPage;
+      var remainder = A2($Basics.rem,pageNum,reposPerPage);
+      var lowerBound = _U.eq(remainder,0) ? pageNum - reposPerPage + 1 : pageNum - remainder + 1;
+      var maxUpperBound = pageNum + reposPerPage - remainder;
+      var upperBound = _U.eq(remainder,0) ? pageNum : _U.cmp(length,maxUpperBound) < 0 ? length : maxUpperBound;
       return A2($Html.div,
       _U.list([]),
       _U.list([A2($Html.button,_U.list([A2($Html$Events.onClick,address,PreviousPage)]),_U.list([$Html.text("<")]))
-              ,A2($Html.span,_U.list([$Html$Attributes.$class("current-page")]),_U.list([$Html.text($Basics.toString(model.pageNum))]))
+              ,A5(viewPageLink,address,model,lowerBound,pageNum,upperBound)
               ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,NextPage)]),_U.list([$Html.text(">")]))]));
    });
    var FilterByName = function (a) {    return {ctor: "FilterByName",_0: a};};
@@ -11222,7 +11243,7 @@ Elm.ElmHub.make = function (_elm) {
       _U.list([$Html$Attributes.$class("content")]),
       _U.list([A2(viewHeader,address,model),A2(viewResponses,address,model),A2(viewPaginator,address,model)]));
    });
-   var initialModel = {userName: "library",filterStr: "",pageNum: 1,responses: _U.list([]),error: $Maybe.Nothing};
+   var initialModel = {userName: "library",filterStr: "",pageNum: 1,responses: _U.list([]),error: $Maybe.Nothing,reposPerPage: 10};
    var RepoResult = function (a) {
       return function (b) {
          return function (c) {
@@ -11294,14 +11315,14 @@ Elm.ElmHub.make = function (_elm) {
    A3($Json$Decode$Pipeline.required,"user",$Json$Decode.string,$Json$Decode$Pipeline.decode(RepoResult))))))))))));
    var responseDecoder = A2($Json$Decode._op[":="],"results",$Json$Decode.list(serverResponseDecoder));
    var decodeResults = function (json) {
-      var _p4 = A2($Json$Decode.decodeString,responseDecoder,json);
-      if (_p4.ctor === "Ok") {
-            return _p4._0;
+      var _p6 = A2($Json$Decode.decodeString,responseDecoder,json);
+      if (_p6.ctor === "Ok") {
+            return _p6._0;
          } else {
             return _U.list([]);
          }
    };
-   var Model = F5(function (a,b,c,d,e) {    return {userName: a,filterStr: b,pageNum: c,responses: d,error: e};});
+   var Model = F6(function (a,b,c,d,e,f) {    return {userName: a,filterStr: b,pageNum: c,responses: d,error: e,reposPerPage: f};});
    var performAction = F3(function (successToAction,errorToAction,task) {
       var successTask = A2($Task.map,successToAction,task);
       return A2($Task.onError,successTask,function (err) {    return $Task.succeed(errorToAction(err));});
@@ -11312,28 +11333,31 @@ Elm.ElmHub.make = function (_elm) {
       return $Effects.task(task);
    };
    var update = F2(function (action,model) {
-      var _p5 = action;
-      switch (_p5.ctor)
-      {case "SetUserName": return {ctor: "_Tuple2",_0: _U.update(model,{userName: _p5._0}),_1: $Effects.none};
-         case "HandleRepoError": var _p6 = _p5._0;
-           if (_p6.ctor === "UnexpectedPayload") {
-                 return {ctor: "_Tuple2",_0: _U.update(model,{error: $Maybe.Just(_p6._0),responses: _U.list([])}),_1: $Effects.none};
+      var _p7 = action;
+      switch (_p7.ctor)
+      {case "JumpToPage": return {ctor: "_Tuple2",_0: _U.update(model,{pageNum: _p7._0}),_1: $Effects.none};
+         case "SetUserName": return {ctor: "_Tuple2",_0: _U.update(model,{userName: _p7._0}),_1: $Effects.none};
+         case "HandleRepoError": var _p8 = _p7._0;
+           if (_p8.ctor === "UnexpectedPayload") {
+                 return {ctor: "_Tuple2",_0: _U.update(model,{error: $Maybe.Just(_p8._0),responses: _U.list([])}),_1: $Effects.none};
               } else {
                  return {ctor: "_Tuple2"
                         ,_0: _U.update(model,
                         {error: $Maybe.Just("There was an error communicating with Elm Hub. Take a look at your username..."),responses: _U.list([])})
                         ,_1: $Effects.none};
               }
-         case "HandleRepoResponse": return {ctor: "_Tuple2",_0: _U.update(model,{responses: _p5._0,error: $Maybe.Nothing}),_1: $Effects.none};
+         case "HandleRepoResponse": return {ctor: "_Tuple2",_0: _U.update(model,{responses: _p7._0,error: $Maybe.Nothing}),_1: $Effects.none};
          case "Search": return {ctor: "_Tuple2",_0: model,_1: repoFeed(model.userName)};
-         case "FilterByName": return {ctor: "_Tuple2",_0: _U.update(model,{filterStr: _p5._0,pageNum: 1}),_1: $Effects.none};
+         case "FilterByName": return {ctor: "_Tuple2",_0: _U.update(model,{filterStr: _p7._0,pageNum: 1}),_1: $Effects.none};
          case "PreviousPage": return {ctor: "_Tuple2",_0: _U.update(model,{pageNum: _U.cmp(model.pageNum,1) < 1 ? 1 : model.pageNum - 1}),_1: $Effects.none};
          default: var count = $String.isEmpty(model.filterStr) ? $List.length(model.responses) : $List.length(A2($List.filter,
            function (r) {
               return _U.eq(model.filterStr,r.namespace) || _U.eq($String.isEmpty(model.filterStr),true);
            },
            model.responses));
-           return {ctor: "_Tuple2",_0: _U.update(model,{pageNum: _U.cmp(count,model.pageNum * 10) < 1 ? model.pageNum : model.pageNum + 1}),_1: $Effects.none};}
+           return {ctor: "_Tuple2"
+                  ,_0: _U.update(model,{pageNum: _U.cmp(count,model.pageNum * model.reposPerPage) < 1 ? model.pageNum : model.pageNum + 1})
+                  ,_1: $Effects.none};}
    });
    return _elm.ElmHub.values = {_op: _op
                                ,repoFeed: repoFeed
@@ -11351,6 +11375,7 @@ Elm.ElmHub.make = function (_elm) {
                                ,HandleRepoError: HandleRepoError
                                ,Search: Search
                                ,SetUserName: SetUserName
+                               ,JumpToPage: JumpToPage
                                ,update: update
                                ,view: view
                                ,onInput: onInput
@@ -11363,7 +11388,8 @@ Elm.ElmHub.make = function (_elm) {
                                ,viewFilterOption: viewFilterOption
                                ,viewResponses: viewResponses
                                ,viewResponse: viewResponse
-                               ,viewPaginator: viewPaginator};
+                               ,viewPaginator: viewPaginator
+                               ,viewPageLink: viewPageLink};
 };
 Elm.Main = Elm.Main || {};
 Elm.Main.make = function (_elm) {

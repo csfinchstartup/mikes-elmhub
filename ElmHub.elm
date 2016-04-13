@@ -46,6 +46,7 @@ type alias Model =
   , pageNum : Int
   , responses : List RepoResult
   , error : Maybe String
+  , reposPerPage : Int
   }
 
 
@@ -102,6 +103,7 @@ initialModel =
   , pageNum = 1
   , responses = []
   , error = Nothing
+  , reposPerPage = 10
   }
 
 
@@ -117,11 +119,14 @@ type Action
   | HandleRepoError Http.Error
   | Search
   | SetUserName String
+  | JumpToPage Int
 
 
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
   case action of
+    JumpToPage page ->
+      ( { model | pageNum = page }, Effects.none)
     SetUserName name ->
       ( { model | userName = name }, Effects.none )
 
@@ -189,7 +194,7 @@ update action model =
       in
         ( { model
             | pageNum =
-                if count <= (model.pageNum * 10) then
+                if count <= (model.pageNum * model.reposPerPage) then
                   model.pageNum
                 else
                   model.pageNum + 1
@@ -278,7 +283,7 @@ viewFilterOption namespace =
 
 
 viewResponses : Address Action -> Model -> Html
-viewResponses address { filterStr, pageNum, responses } =
+viewResponses address { filterStr, pageNum, responses, reposPerPage } =
   ul
     [ class "repo-items-container", style [ ( "list-style", "none" ), ( "-webkit-padding-start", "0" ) ] ]
     (responses
@@ -287,8 +292,8 @@ viewResponses address { filterStr, pageNum, responses } =
             (String.startsWith filterStr r.namespace)
               || (String.isEmpty filterStr == True)
           )
-      |> List.drop ((pageNum - 1) * 10)
-      |> List.take 10
+      |> List.drop ((pageNum - 1) * reposPerPage)
+      |> List.take reposPerPage
       |> List.map viewResponse
     )
 
@@ -335,9 +340,58 @@ viewResponse response =
 
 viewPaginator : Address Action -> Model -> Html
 viewPaginator address model =
+  let
+    { pageNum, reposPerPage } =
+      model
+
+    length =
+      List.length model.responses
+
+    remainder =
+      pageNum `rem` reposPerPage
+
+    lowerBound =
+      if remainder == 0 then
+        pageNum - reposPerPage + 1
+      else
+        pageNum - remainder + 1
+
+    maxUpperBound =
+      pageNum + reposPerPage - remainder
+
+    upperBound =
+      if remainder == 0 then
+        pageNum
+      else if length < maxUpperBound then
+        length
+      else
+        maxUpperBound
+  in
+    div
+      []
+      [ button [ onClick address PreviousPage ] [ text "<" ]
+        -- , span [ class "current-page" ] [ text (toString pageNum) ]
+      , (viewPageLink address model lowerBound pageNum upperBound)
+      , button [ onClick address NextPage ] [ text ">" ]
+      ]
+
+
+viewPageLink : Address Action -> Model -> Int -> Int -> Int -> Html
+viewPageLink address model lower active upper =
   div
-    []
-    [ button [ onClick address PreviousPage ] [ text "<" ]
-    , span [ class "current-page" ] [ text (toString model.pageNum) ]
-    , button [ onClick address NextPage ] [ text ">" ]
-    ]
+    [ class "number-buttons" ]
+    (List.map
+      (\page ->
+        button
+          [ onClick address (JumpToPage page)
+          , class
+              (if page == active then
+                "active-page"
+               else
+                "just-another-page"
+              )
+          ]
+          [ text (toString page) ]
+      )
+      [lower..upper]
+    )
