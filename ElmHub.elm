@@ -201,16 +201,7 @@ maxPageNum model =
 
 onMaxPage model =
   (maxPageNum model) <= model.pageNum
---
--- maxUpperBound =
---   pageNum + reposPerPage - remainder
---
--- -- (model.pageNum * model.reposPerPage)
--- upperBound =
---   if remainder == 0 then
---     pageNum
---   else if ceiling (length / (toFloat reposPerPage)) < (pageNum + reposPerPage - remainder)
---
+
 filteredLength model =
   if String.isEmpty model.filterStr then
     List.length model.responses
@@ -380,7 +371,7 @@ viewPaginator address model =
     upperBound =
       if remainder == 0 then
         pageNum
-      else if onMaxPage model then
+      else if (maxPageNum model) < maxUpperBound then
         maxPageNum model
       else
         maxUpperBound
@@ -388,13 +379,13 @@ viewPaginator address model =
     div
       []
       [ button [ onClick address PreviousPage ] [ text "<" ]
-      , (viewPageLink address model lowerBound pageNum upperBound)
+      , (viewPageLink address model lowerBound upperBound)
       , button [ onClick address NextPage ] [ text ">" ]
       ]
 
 
-viewPageLink : Address Action -> Model -> Int -> Int -> Int -> Html
-viewPageLink address model lower active upper =
+viewPageLink : Address Action -> Model -> Int -> Int -> Html
+viewPageLink address model lower upper =
   div
     [ class "number-buttons" ]
     (List.map
@@ -402,7 +393,7 @@ viewPageLink address model lower active upper =
         button
           [ onClick address (JumpToPage page)
           , class
-              (if page == active then
+              (if page == model.pageNum then
                 "active-page"
                else
                 "just-another-page"

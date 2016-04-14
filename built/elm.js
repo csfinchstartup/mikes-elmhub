@@ -11198,13 +11198,13 @@ Elm.ElmHub.make = function (_elm) {
    };
    var onMaxPage = function (model) {    return _U.cmp(maxPageNum(model),model.pageNum) < 1;};
    var JumpToPage = function (a) {    return {ctor: "JumpToPage",_0: a};};
-   var viewPageLink = F5(function (address,model,lower,active,upper) {
+   var viewPageLink = F4(function (address,model,lower,upper) {
       return A2($Html.div,
       _U.list([$Html$Attributes.$class("number-buttons")]),
       A2($List.map,
       function (page) {
          return A2($Html.button,
-         _U.list([A2($Html$Events.onClick,address,JumpToPage(page)),$Html$Attributes.$class(_U.eq(page,active) ? "active-page" : "just-another-page")]),
+         _U.list([A2($Html$Events.onClick,address,JumpToPage(page)),$Html$Attributes.$class(_U.eq(page,model.pageNum) ? "active-page" : "just-another-page")]),
          _U.list([$Html.text($Basics.toString(page))]));
       },
       _U.range(lower,upper)));
@@ -11228,11 +11228,11 @@ Elm.ElmHub.make = function (_elm) {
       var remainder = A2($Basics.rem,pageNum,reposPerPage);
       var lowerBound = _U.eq(remainder,0) ? pageNum - reposPerPage + 1 : pageNum - remainder + 1;
       var maxUpperBound = pageNum + reposPerPage - remainder;
-      var upperBound = _U.eq(remainder,0) ? pageNum : onMaxPage(model) ? maxPageNum(model) : maxUpperBound;
+      var upperBound = _U.eq(remainder,0) ? pageNum : _U.cmp(maxPageNum(model),maxUpperBound) < 0 ? maxPageNum(model) : maxUpperBound;
       return A2($Html.div,
       _U.list([]),
       _U.list([A2($Html.button,_U.list([A2($Html$Events.onClick,address,PreviousPage)]),_U.list([$Html.text("<")]))
-              ,A5(viewPageLink,address,model,lowerBound,pageNum,upperBound)
+              ,A4(viewPageLink,address,model,lowerBound,upperBound)
               ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,NextPage)]),_U.list([$Html.text(">")]))]));
    });
    var FilterByName = function (a) {    return {ctor: "FilterByName",_0: a};};
