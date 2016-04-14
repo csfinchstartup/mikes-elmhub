@@ -11184,6 +11184,19 @@ Elm.ElmHub.make = function (_elm) {
    var onInput = F2(function (address,wrap) {
       return A3($Html$Events.on,"input",$Html$Events.targetValue,function (val) {    return A2($Signal.message,address,wrap(val));});
    });
+   var filteredLength = function (model) {
+      return $String.isEmpty(model.filterStr) ? $List.length(model.responses) : $List.length(A2($List.filter,
+      function (r) {
+         return _U.eq(model.filterStr,r.namespace) || _U.eq($String.isEmpty(model.filterStr),true);
+      },
+      model.responses));
+   };
+   var maxPageNum = function (model) {
+      var reposPerPage = $Basics.toFloat(model.reposPerPage);
+      var length = $Basics.toFloat(filteredLength(model));
+      return $Basics.ceiling(length / reposPerPage);
+   };
+   var onMaxPage = function (model) {    return _U.cmp(maxPageNum(model),model.pageNum) < 1;};
    var JumpToPage = function (a) {    return {ctor: "JumpToPage",_0: a};};
    var viewPageLink = F5(function (address,model,lower,active,upper) {
       return A2($Html.div,
@@ -11209,14 +11222,13 @@ Elm.ElmHub.make = function (_elm) {
    var NextPage = {ctor: "NextPage"};
    var PreviousPage = {ctor: "PreviousPage"};
    var viewPaginator = F2(function (address,model) {
-      var length = $List.length(model.responses);
       var _p5 = model;
       var pageNum = _p5.pageNum;
       var reposPerPage = _p5.reposPerPage;
       var remainder = A2($Basics.rem,pageNum,reposPerPage);
       var lowerBound = _U.eq(remainder,0) ? pageNum - reposPerPage + 1 : pageNum - remainder + 1;
       var maxUpperBound = pageNum + reposPerPage - remainder;
-      var upperBound = _U.eq(remainder,0) ? pageNum : _U.cmp(length,maxUpperBound) < 0 ? length : maxUpperBound;
+      var upperBound = _U.eq(remainder,0) ? pageNum : onMaxPage(model) ? maxPageNum(model) : maxUpperBound;
       return A2($Html.div,
       _U.list([]),
       _U.list([A2($Html.button,_U.list([A2($Html$Events.onClick,address,PreviousPage)]),_U.list([$Html.text("<")]))
@@ -11339,25 +11351,17 @@ Elm.ElmHub.make = function (_elm) {
          case "SetUserName": return {ctor: "_Tuple2",_0: _U.update(model,{userName: _p7._0}),_1: $Effects.none};
          case "HandleRepoError": var _p8 = _p7._0;
            if (_p8.ctor === "UnexpectedPayload") {
-                 return {ctor: "_Tuple2",_0: _U.update(model,{error: $Maybe.Just(_p8._0),responses: _U.list([])}),_1: $Effects.none};
+                 return {ctor: "_Tuple2",_0: _U.update(model,{error: $Maybe.Just(_p8._0)}),_1: $Effects.none};
               } else {
                  return {ctor: "_Tuple2"
-                        ,_0: _U.update(model,
-                        {error: $Maybe.Just("There was an error communicating with Elm Hub. Take a look at your username..."),responses: _U.list([])})
+                        ,_0: _U.update(model,{error: $Maybe.Just("There was an error communicating with Elm Hub. Take a look at your username...")})
                         ,_1: $Effects.none};
               }
          case "HandleRepoResponse": return {ctor: "_Tuple2",_0: _U.update(model,{responses: _p7._0,error: $Maybe.Nothing}),_1: $Effects.none};
-         case "Search": return {ctor: "_Tuple2",_0: model,_1: repoFeed(model.userName)};
+         case "Search": return {ctor: "_Tuple2",_0: _U.update(model,{responses: _U.list([])}),_1: repoFeed(model.userName)};
          case "FilterByName": return {ctor: "_Tuple2",_0: _U.update(model,{filterStr: _p7._0,pageNum: 1}),_1: $Effects.none};
          case "PreviousPage": return {ctor: "_Tuple2",_0: _U.update(model,{pageNum: _U.cmp(model.pageNum,1) < 1 ? 1 : model.pageNum - 1}),_1: $Effects.none};
-         default: var count = $String.isEmpty(model.filterStr) ? $List.length(model.responses) : $List.length(A2($List.filter,
-           function (r) {
-              return _U.eq(model.filterStr,r.namespace) || _U.eq($String.isEmpty(model.filterStr),true);
-           },
-           model.responses));
-           return {ctor: "_Tuple2"
-                  ,_0: _U.update(model,{pageNum: _U.cmp(count,model.pageNum * model.reposPerPage) < 1 ? model.pageNum : model.pageNum + 1})
-                  ,_1: $Effects.none};}
+         default: return {ctor: "_Tuple2",_0: _U.update(model,{pageNum: onMaxPage(model) ? model.pageNum : model.pageNum + 1}),_1: $Effects.none};}
    });
    return _elm.ElmHub.values = {_op: _op
                                ,repoFeed: repoFeed
@@ -11377,6 +11381,9 @@ Elm.ElmHub.make = function (_elm) {
                                ,SetUserName: SetUserName
                                ,JumpToPage: JumpToPage
                                ,update: update
+                               ,maxPageNum: maxPageNum
+                               ,onMaxPage: onMaxPage
+                               ,filteredLength: filteredLength
                                ,view: view
                                ,onInput: onInput
                                ,onChange: onChange

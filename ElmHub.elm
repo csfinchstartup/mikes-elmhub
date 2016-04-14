@@ -126,7 +126,8 @@ update : Action -> Model -> ( Model, Effects Action )
 update action model =
   case action of
     JumpToPage page ->
-      ( { model | pageNum = page }, Effects.none)
+      ( { model | pageNum = page }, Effects.none )
+
     SetUserName name ->
       ( { model | userName = name }, Effects.none )
 
@@ -135,7 +136,6 @@ update action model =
         Http.UnexpectedPayload error ->
           ( { model
               | error = Just error
-              , responses = []
             }
           , Effects.none
           )
@@ -143,7 +143,6 @@ update action model =
         _ ->
           ( { model
               | error = Just "There was an error communicating with Elm Hub. Take a look at your username..."
-              , responses = []
             }
           , Effects.none
           )
@@ -157,7 +156,7 @@ update action model =
       )
 
     Search ->
-      ( model, repoFeed model.userName )
+      ( { model | responses = [] }, repoFeed model.userName )
 
     FilterByName str ->
       ( { model
@@ -179,28 +178,50 @@ update action model =
       )
 
     NextPage ->
-      let
-        count =
-          if String.isEmpty model.filterStr then
-            List.length model.responses
-          else
-            model.responses
-              |> List.filter
-                  (\r ->
-                    (model.filterStr == r.namespace)
-                      || (String.isEmpty model.filterStr == True)
-                  )
-              |> List.length
-      in
-        ( { model
-            | pageNum =
-                if count <= (model.pageNum * model.reposPerPage) then
-                  model.pageNum
-                else
-                  model.pageNum + 1
-          }
-        , Effects.none
-        )
+      ( { model
+          | pageNum =
+              if onMaxPage model then
+              -- if (filteredLength model) <= (model.pageNum * model.reposPerPage) then
+                model.pageNum
+              else
+                model.pageNum + 1
+        }
+      , Effects.none
+      )
+
+
+
+
+maxPageNum model =
+  let
+    length = toFloat (filteredLength model)
+    reposPerPage = (toFloat model.reposPerPage)
+  in
+    ceiling (length / reposPerPage)
+
+onMaxPage model =
+  (maxPageNum model) <= model.pageNum
+--
+-- maxUpperBound =
+--   pageNum + reposPerPage - remainder
+--
+-- -- (model.pageNum * model.reposPerPage)
+-- upperBound =
+--   if remainder == 0 then
+--     pageNum
+--   else if ceiling (length / (toFloat reposPerPage)) < (pageNum + reposPerPage - remainder)
+--
+filteredLength model =
+  if String.isEmpty model.filterStr then
+    List.length model.responses
+  else
+    model.responses
+      |> List.filter
+          (\r ->
+            (model.filterStr == r.namespace)
+              || (String.isEmpty model.filterStr == True)
+          )
+      |> List.length
 
 
 view : Address Action -> Model -> Html
@@ -344,9 +365,6 @@ viewPaginator address model =
     { pageNum, reposPerPage } =
       model
 
-    length =
-      List.length model.responses
-
     remainder =
       pageNum `rem` reposPerPage
 
@@ -362,15 +380,14 @@ viewPaginator address model =
     upperBound =
       if remainder == 0 then
         pageNum
-      else if length < maxUpperBound then
-        length
+      else if onMaxPage model then
+        maxPageNum model
       else
         maxUpperBound
   in
     div
       []
       [ button [ onClick address PreviousPage ] [ text "<" ]
-        -- , span [ class "current-page" ] [ text (toString pageNum) ]
       , (viewPageLink address model lowerBound pageNum upperBound)
       , button [ onClick address NextPage ] [ text ">" ]
       ]
