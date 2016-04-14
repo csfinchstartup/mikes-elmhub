@@ -40,10 +40,11 @@ First: [Download and install Elm](http://elm-lang.org/install)
   - hack together a simple server
   - make it pretty
   - unify naming conventions
+  - TODO add router
 - API design, requirements and usage
   - one JSON file per user (currently only supports "library" user)
   - TODO parameterize the server endpoint
 - Security considerations
-  - TODO
+  - TODO generate/use API key
 - Use of tooling
   - elm-package.json, elm live, elm package install, elm css
