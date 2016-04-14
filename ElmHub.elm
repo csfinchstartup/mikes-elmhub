@@ -181,7 +181,7 @@ update action model =
       ( { model
           | pageNum =
               if onMaxPage model then
-              -- if (filteredLength model) <= (model.pageNum * model.reposPerPage) then
+                -- if (filteredLength model) <= (model.pageNum * model.reposPerPage) then
                 model.pageNum
               else
                 model.pageNum + 1
@@ -190,17 +190,20 @@ update action model =
       )
 
 
-
-
 maxPageNum model =
   let
-    length = toFloat (filteredLength model)
-    reposPerPage = (toFloat model.reposPerPage)
+    length =
+      toFloat (filteredLength model)
+
+    reposPerPage =
+      (toFloat model.reposPerPage)
   in
     ceiling (length / reposPerPage)
 
+
 onMaxPage model =
   (maxPageNum model) <= model.pageNum
+
 
 filteredLength model =
   if String.isEmpty model.filterStr then
@@ -378,28 +381,27 @@ viewPaginator address model =
   in
     div
       []
-      [ button [ onClick address PreviousPage ] [ text "<" ]
-      , (viewPageLink address model lowerBound upperBound)
-      , button [ onClick address NextPage ] [ text ">" ]
-      ]
-
-
-viewPageLink : Address Action -> Model -> Int -> Int -> Html
-viewPageLink address model lower upper =
-  div
-    [ class "number-buttons" ]
-    (List.map
-      (\page ->
-        button
-          [ onClick address (JumpToPage page)
-          , class
-              (if page == model.pageNum then
-                "active-page"
-               else
-                "just-another-page"
-              )
-          ]
-          [ text (toString page) ]
+      (List.append
+        (button [ onClick address PreviousPage ] [ text "<" ]
+          :: (viewPageLink address model lowerBound upperBound)
+        )
+        [ button [ onClick address NextPage ] [ text ">" ] ]
       )
-      [lower..upper]
+
+
+viewPageLink : Address Action -> Model -> Int -> Int -> List Html
+viewPageLink address model lower upper =
+  List.map
+    (\page ->
+      button
+        [ onClick address (JumpToPage page)
+        , class
+            (if page == model.pageNum then
+              "active-page"
+             else
+              "just-another-page"
+            )
+        ]
+        [ text (toString page) ]
     )
+    [lower..upper]

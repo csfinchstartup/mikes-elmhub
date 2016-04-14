@@ -11199,15 +11199,13 @@ Elm.ElmHub.make = function (_elm) {
    var onMaxPage = function (model) {    return _U.cmp(maxPageNum(model),model.pageNum) < 1;};
    var JumpToPage = function (a) {    return {ctor: "JumpToPage",_0: a};};
    var viewPageLink = F4(function (address,model,lower,upper) {
-      return A2($Html.div,
-      _U.list([$Html$Attributes.$class("number-buttons")]),
-      A2($List.map,
+      return A2($List.map,
       function (page) {
          return A2($Html.button,
          _U.list([A2($Html$Events.onClick,address,JumpToPage(page)),$Html$Attributes.$class(_U.eq(page,model.pageNum) ? "active-page" : "just-another-page")]),
          _U.list([$Html.text($Basics.toString(page))]));
       },
-      _U.range(lower,upper)));
+      _U.range(lower,upper));
    });
    var SetUserName = function (a) {    return {ctor: "SetUserName",_0: a};};
    var Search = {ctor: "Search"};
@@ -11231,9 +11229,11 @@ Elm.ElmHub.make = function (_elm) {
       var upperBound = _U.eq(remainder,0) ? pageNum : _U.cmp(maxPageNum(model),maxUpperBound) < 0 ? maxPageNum(model) : maxUpperBound;
       return A2($Html.div,
       _U.list([]),
-      _U.list([A2($Html.button,_U.list([A2($Html$Events.onClick,address,PreviousPage)]),_U.list([$Html.text("<")]))
-              ,A4(viewPageLink,address,model,lowerBound,upperBound)
-              ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,NextPage)]),_U.list([$Html.text(">")]))]));
+      A2($List.append,
+      A2($List._op["::"],
+      A2($Html.button,_U.list([A2($Html$Events.onClick,address,PreviousPage)]),_U.list([$Html.text("<")])),
+      A4(viewPageLink,address,model,lowerBound,upperBound)),
+      _U.list([A2($Html.button,_U.list([A2($Html$Events.onClick,address,NextPage)]),_U.list([$Html.text(">")]))])));
    });
    var FilterByName = function (a) {    return {ctor: "FilterByName",_0: a};};
    var viewFilter = F2(function (address,model) {
