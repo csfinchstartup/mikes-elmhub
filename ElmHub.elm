@@ -1,50 +1,31 @@
 module ElmHub (..) where
 
+import StartApp.Simple as StartApp
 import Http
 import Html exposing (..)
-import Html.Attributes exposing (class, href, selected, value, name, property, style, for)
 import Html.Events exposing (..)
+import Html.Attributes exposing (class, href, selected, value, name, property, style, for)
+import VirtualDom
 import Signal exposing (Address)
-import StartApp.Simple as StartApp
-import Json.Decode as Json
 import Task exposing (Task)
 import Effects exposing (Effects)
-import String
-import Set
 import Json.Decode exposing (Decoder, (:=), int, string, bool)
 import Json.Decode.Pipeline exposing (..)
 import Json.Encode
 import Maybe exposing (..)
+import String
+import Set
+import Shims exposing (performAction, onInput, onChange)
 
 
-repoFeed userName =
-  let
-    url =
-      "http://127.0.0.1:3000/api/repos/" ++ userName
-
-    task =
-      performAction
-        HandleRepoResponse
-        HandleRepoError
-        (Http.get responseDecoder url)
-  in
-    Effects.task task
-
-
-performAction : (a -> b) -> (y -> b) -> Task y a -> Task x b
-performAction successToAction errorToAction task =
-  let
-    successTask =
-      Task.map successToAction task
-  in
-    Task.onError successTask (\err -> Task.succeed (errorToAction err))
+-- MODEL
 
 
 type alias Model =
   { userName : String
   , filterStr : String
   , pageNum : Int
-  , responses : List RepoResult
+  , results : List RepoResult
   , error : Maybe String
   , reposPerPage : Int
   }
@@ -65,23 +46,52 @@ type alias RepoResult =
   }
 
 
+initialModel : Model
+initialModel =
+  { userName = "library"
+  , filterStr = ""
+  , pageNum = 1
+  , results = []
+  , error = Nothing
+  , reposPerPage = 10
+  }
+
+
+
+-- FETCH/PARSE DATA
+
+
+repoFeed userName =
+  let
+    url =
+      "http://127.0.0.1:3000/api/repos/" ++ userName
+
+    task =
+      performAction
+        HandleRepoResult
+        HandleRepoError
+        (Http.get resultsDecoder url)
+  in
+    Effects.task task
+
+
 decodeResults : String -> List RepoResult
 decodeResults json =
-  case Json.Decode.decodeString responseDecoder json of
-    Ok responses ->
-      responses
+  case Json.Decode.decodeString resultsDecoder json of
+    Ok results ->
+      results
 
     Err err ->
       []
 
 
-responseDecoder : Decoder (List RepoResult)
-responseDecoder =
-  "results" := Json.Decode.list serverResponseDecoder
+resultsDecoder : Decoder (List RepoResult)
+resultsDecoder =
+  "results" := Json.Decode.list repoResultDecoder
 
 
-serverResponseDecoder : Decoder RepoResult
-serverResponseDecoder =
+repoResultDecoder : Decoder RepoResult
+repoResultDecoder =
   decode RepoResult
     |> required "user" string
     |> required "name" string
@@ -96,26 +106,15 @@ serverResponseDecoder =
     |> required "last_updated" string
 
 
-initialModel : Model
-initialModel =
-  { userName = "library"
-  , filterStr = ""
-  , pageNum = 1
-  , responses = []
-  , error = Nothing
-  , reposPerPage = 10
-  }
 
-
-
--- Model "" 1 (decodeResults sampleJson)
+-- UPDATE/ACTIONS
 
 
 type Action
   = FilterByName String
   | PreviousPage
   | NextPage
-  | HandleRepoResponse (List RepoResult)
+  | HandleRepoResult (List RepoResult)
   | HandleRepoError Http.Error
   | Search
   | SetUserName String
@@ -147,16 +146,16 @@ update action model =
           , Effects.none
           )
 
-    HandleRepoResponse responses ->
+    HandleRepoResult results ->
       ( { model
-          | responses = responses
+          | results = results
           , error = Nothing
         }
       , Effects.none
       )
 
     Search ->
-      ( { model | responses = [] }, repoFeed model.userName )
+      ( { model | results = [] }, repoFeed model.userName )
 
     FilterByName str ->
       ( { model
@@ -181,7 +180,6 @@ update action model =
       ( { model
           | pageNum =
               if onMaxPage model then
-                -- if (filteredLength model) <= (model.pageNum * model.reposPerPage) then
                 model.pageNum
               else
                 model.pageNum + 1
@@ -190,6 +188,12 @@ update action model =
       )
 
 
+onMaxPage : Model -> Bool
+onMaxPage model =
+  (maxPageNum model) <= model.pageNum
+
+
+maxPageNum : Model -> Int
 maxPageNum model =
   let
     length =
@@ -201,15 +205,12 @@ maxPageNum model =
     ceiling (length / reposPerPage)
 
 
-onMaxPage model =
-  (maxPageNum model) <= model.pageNum
-
-
+filteredLength : Model -> Int
 filteredLength model =
   if String.isEmpty model.filterStr then
-    List.length model.responses
+    List.length model.results
   else
-    model.responses
+    model.results
       |> List.filter
           (\r ->
             (model.filterStr == r.namespace)
@@ -218,22 +219,18 @@ filteredLength model =
       |> List.length
 
 
+
+-- VIEWS
+
+
 view : Address Action -> Model -> Html
 view address model =
   div
     [ class "content" ]
     [ (viewHeader address model)
-    , (viewResponses address model)
+    , (viewResults address model)
     , (viewPaginator address model)
     ]
-
-
-onInput address wrap =
-  on "input" targetValue (\val -> Signal.message address (wrap val))
-
-
-onChange address wrap =
-  on "change" targetValue (\val -> Signal.message address (wrap val))
 
 
 viewHeader : Address Action -> Model -> Html
@@ -244,16 +241,6 @@ viewHeader address model =
     , (viewFilter address model)
     , (viewError model.error)
     ]
-
-
-viewError : Maybe String -> Html
-viewError error =
-  case error of
-    Just message ->
-      span [ class "error" ] [ text message ]
-
-    Nothing ->
-      text ""
 
 
 viewSearchUser : Address Action -> Model -> Html
@@ -277,7 +264,7 @@ viewFilter address model =
     , select
         [ class "namespace-filter", name "namespace-filter", onChange address FilterByName ]
         (option [ value "", selected True ] [ text "All Accounts" ]
-          :: (model.responses
+          :: (model.results
                 |> List.map .namespace
                 |> Set.fromList
                 |> Set.toList
@@ -288,20 +275,16 @@ viewFilter address model =
     ]
 
 
-defaultValue str =
-  property "defaultValue" (Json.Encode.string str)
-
-
 viewFilterOption : String -> Html
 viewFilterOption namespace =
   option [] [ text namespace ]
 
 
-viewResponses : Address Action -> Model -> Html
-viewResponses address { filterStr, pageNum, responses, reposPerPage } =
+viewResults : Address Action -> Model -> Html
+viewResults address { filterStr, pageNum, results, reposPerPage } =
   ul
     [ class "repo-items-container", style [ ( "list-style", "none" ), ( "-webkit-padding-start", "0" ) ] ]
-    (responses
+    (results
       |> List.filter
           (\r ->
             (String.startsWith filterStr r.namespace)
@@ -309,34 +292,34 @@ viewResponses address { filterStr, pageNum, responses, reposPerPage } =
           )
       |> List.drop ((pageNum - 1) * reposPerPage)
       |> List.take reposPerPage
-      |> List.map viewResponse
+      |> List.map viewResult
     )
 
 
-viewResponse : RepoResult -> Html
-viewResponse response =
+viewResult : RepoResult -> Html
+viewResult results =
   let
     namespaceTitle =
-      span [ class "repo-namespace-title" ] [ text response.namespace ]
+      span [ class "repo-namespace-title" ] [ text results.namespace ]
 
     seperator =
       span [] [ text " / " ]
 
     nameTitle =
-      span [ class "repo-name-title" ] [ text response.name ]
+      span [ class "repo-name-title" ] [ text results.name ]
 
     privateMarker =
-      (if response.is_private then
+      (if results.is_private then
         small [] [ span [ class "is-private" ] [ text "private" ] ]
        else
         text ""
       )
 
     description =
-      (if String.isEmpty response.description then
+      (if String.isEmpty results.description then
         text ""
        else
-        small [] [ p [ class "repo-description" ] [ text response.description ] ]
+        small [] [ p [ class "repo-description" ] [ text results.description ] ]
       )
   in
     li
@@ -405,3 +388,18 @@ viewPageLink address model lower upper =
         [ text (toString page) ]
     )
     [lower..upper]
+
+
+viewError : Maybe String -> Html
+viewError error =
+  case error of
+    Just message ->
+      span [ class "error" ] [ text message ]
+
+    Nothing ->
+      text ""
+
+
+defaultValue : String -> VirtualDom.Property
+defaultValue str =
+  property "defaultValue" (Json.Encode.string str)

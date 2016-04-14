@@ -1,17 +1,13 @@
+## Requirements
+Flask is the only dependency for the server. You can either install flask
+globally, or in a virtualenv like this
+```
+cd server; virtualenv env; pip install flask; cd -
+```
+
 ## Quickstart
-
 ```
-# NOTE: you must have virtualenv installed for the quickstart option,
-# otherwise you can follow the manual steps in the next section
 ./quickstart.sh
-```
-
-## Manual Start
-```
-cd <REPO_ROOT_DIR>/server
-pip install flask
-python server.py &
-open <REPO_ROOT_DIR>/index.html
 ```
 
 ## Dev Workflow
@@ -26,21 +22,24 @@ First: [Download and install Elm](http://elm-lang.org/install)
 ### Solution Commentary
 - Basic web knowledge (html/js/css)
 - Framework experience + choices
-  - Elm is a reactive programming framework (e.g. React/Redux stack), but it has a number of unique features and advantages that made it a compelling choice for this project:
+  - Elm is a reactive programming framework (e.g. React/Redux stack), but it has
+  a number of unique features and advantages that made it a compelling choice
+  for this project:
     - type system
     - compiler to catch bugs before runtime
     - immutable data structures
     - performant (virtual DOM)
     - Elm CSS preprocessor
-    - easy to use build/package system (updates elm-package.json whenever a new package is installed)
+    - easy to use build/package system (updates elm-package.json whenever a new
+      package is installed)
     - fun to use
 - UI architecture + design approach
-  - stub out models/views
+  - stub out basic models/views
   - add Actions
-  - make models/views real
+  - wire up models/views/actions
   - hack together a simple server
-  - TODO unify naming conventions
-  - TODO consider folder systems
+  - make it pretty
+  - unify naming conventions
 - API design, requirements and usage
   - one JSON file per user (currently only supports "library" user)
   - TODO parameterize the server endpoint
