@@ -11234,8 +11234,9 @@ Elm.ElmHub.make = function (_elm) {
    var viewSearchUser = F2(function (address,model) {
       return A2($Html.div,
       _U.list([$Html$Attributes.$class("user-name-search")]),
-      _U.list([A2($Html.input,_U.list([A2($Shims.onInput,address,SetUserName),defaultValue(model.userName)]),_U.list([]))
-              ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Search)]),_U.list([$Html.text("Search by username")]))]));
+      _U.list([A2($Html.label,_U.list([$Html$Attributes.$for("user-name")]),_U.list([$Html.text("User ")]))
+              ,A2($Html.input,_U.list([$Html$Attributes.name("user-name"),A2($Shims.onInput,address,SetUserName),defaultValue(model.userName)]),_U.list([]))
+              ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Search)]),_U.list([$Html.text("Search")]))]));
    });
    var HandleRepoError = function (a) {    return {ctor: "HandleRepoError",_0: a};};
    var HandleRepoResult = function (a) {    return {ctor: "HandleRepoResult",_0: a};};

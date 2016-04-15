@@ -247,12 +247,14 @@ viewSearchUser : Address Action -> Model -> Html
 viewSearchUser address model =
   div
     [ class "user-name-search" ]
-    [ input
-        [ onInput address SetUserName
+    [ label [ for "user-name"] [ text "User "]
+    , input
+        [ name "user-name"
+        , onInput address SetUserName
         , defaultValue model.userName
         ]
         []
-    , button [ onClick address Search ] [ text "Search by username" ]
+    , button [ onClick address Search ] [ text "Search" ]
     ]
 
 
