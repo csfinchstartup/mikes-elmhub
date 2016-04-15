@@ -1,19 +1,27 @@
 module Main (..) where
 
-import Html exposing (..)
+import StartApp
+import ElmHub exposing (..)
+import Effects exposing (Effects)
+import Task exposing (Task)
+import Html exposing (Html)
 
 
-type alias Model =
-  Int
-
-
-model =
-  3
-
-
-view model =
-  div [] [ text "hi mike" ]
-
-
+main : Signal Html
 main =
-  view model
+  app.html
+
+
+app : StartApp.App Model
+app =
+  StartApp.start
+    { view = view
+    , update = update
+    , init = ( initialModel, repoFeed initialModel.userName)
+    , inputs = []
+    }
+
+
+port tasks : Signal (Task Effects.Never ())
+port tasks =
+  app.tasks

@@ -1,0 +1,50 @@
+.content {
+    padding: 2em;
+    font-family: Helvetica, Arial, serif;
+}
+
+.user-name-search {
+    margin: 1em 0em;
+}
+
+.user-name-search > input {
+    margin-right: 1em;
+}
+
+.namespace-filter {
+    margin-bottom: 1.5em;
+}
+
+.is-private {
+    color: #FF6600;
+    border-color: #FF6600;
+    border-style: solid;
+    padding: 0.1em 0.5em;
+    margin-left: 0.5em;
+}
+
+.repo-items-container {
+    margin: 0em;
+}
+
+.repo-item > a {
+    color: #757575;
+    text-decoration: none;
+}
+
+.repo-description {
+    color: #A9A9A9;
+}
+
+.repo-name-title {
+    color: #000000;
+}
+
+.error {
+    color: #B0171F;
+}
+
+.active-page {
+    color: #1874CD;
+    font-weight: bold;
+}
